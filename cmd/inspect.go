@@ -14,6 +14,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type Stone struct {
+	Meta   payload.Metadata
+	Layout payload.LayoutEntry
+	Index  payload.IndexEntry
+}
+
 func Inspect(ctx context.Context, cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
 		logrus.Fatal("One stone file as argument required")

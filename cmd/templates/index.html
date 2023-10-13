@@ -1,0 +1,9 @@
+<html>
+    <body>
+        <ul>
+            {{ range $package := . }}
+            <li>File: <a href="{{$package}}">{{$package}}</a></li>
+            {{ end }}
+        </ul>
+    </body>
+</html>

@@ -96,6 +96,22 @@ type MetaRecord struct {
 	Padding    byte
 }
 
+type Metadata struct {
+	Name         string
+	Version      string
+	Release      string
+	BuildRelease string
+	Summary      string
+	Description  string
+	Homepage     string
+	SourceID     string
+	Architecture string
+	License      string
+	Provides     []string
+	Depends      []string
+	Conflicts    []string
+}
+
 func ReadIntegerData[T any](input io.Reader) (T, error) {
 	var output T
 	err := binary.Read(input, binary.BigEndian, &output)
@@ -132,9 +148,69 @@ func PrintMetaPayload(r io.Reader, records int) error {
 			return err
 		}
 
+		if stringData, ok := data.(string); ok {
+			data = strings.TrimSuffix(stringData, "\x00")
+		}
+
 		fmt.Printf("%-15s : %v\n", strings.TrimLeft(record.RecordTag.String(), "RecordTag"), data)
 	}
 	return nil
+}
+
+func DecodeMetaPayload(r io.Reader, records int) (Metadata, error) {
+	metadata := Metadata{}
+	bufferedReader := bufio.NewReader(r)
+	for i := 0; i < records; i++ {
+		record := MetaRecord{}
+
+		err := binary.Read(bufferedReader, binary.BigEndian, &record)
+		if err != nil {
+			return Metadata{}, err
+		}
+
+		data, err := switchstuff(bufferedReader, record.RecordType)
+		if err != nil {
+			return Metadata{}, err
+		}
+
+		if stringData, ok := data.(string); ok {
+			data = strings.TrimSuffix(stringData, "\x00")
+		}
+
+		switch record.RecordTag {
+		case RecordTagArchitecture:
+			metadata.Architecture = fmt.Sprintf("%v", data)
+		case RecordTagBuildDepends:
+		case RecordTagBuildRelease:
+			metadata.BuildRelease = fmt.Sprintf("%v", data)
+		case RecordTagConflicts:
+		case RecordTagDepends:
+		case RecordTagDescription:
+			metadata.Description = fmt.Sprintf("%v", data)
+		case RecordTagHomepage:
+			metadata.Homepage = fmt.Sprintf("%v", data)
+		case RecordTagLicense:
+			metadata.License = fmt.Sprintf("%v", data)
+		case RecordTagName:
+			metadata.Name = fmt.Sprintf("%v", data)
+		case RecordTagPackageHash:
+		case RecordTagPackageSize:
+		case RecordTagPackageURI:
+		case RecordTagProvides:
+		case RecordTagRelease:
+			metadata.Release = fmt.Sprintf("%v", data)
+		case RecordTagSourceID:
+			metadata.SourceID = fmt.Sprintf("%v", data)
+		case RecordTagSourcePath:
+		case RecordTagSourceRef:
+		case RecordTagSourceURI:
+		case RecordTagSummary:
+			metadata.Summary = fmt.Sprintf("%v", data)
+		case RecordTagVersion:
+			metadata.Version = fmt.Sprintf("%v", data)
+		}
+	}
+	return metadata, nil
 }
 
 func wrapDependency(depType Dependency, name string) string {

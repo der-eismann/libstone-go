@@ -15,5 +15,10 @@ func NewRootCommand() *cobra.Command {
 			"inspect", "Inspect stone package contents",
 			cmdutil.WithRun(Inspect),
 		)),
+
+		cmdutil.WithSubCommand(cmdutil.New(
+			"http", "Run web server with package index",
+			cmdutil.WithRun(HTTPServer),
+		)),
 	)
 }
